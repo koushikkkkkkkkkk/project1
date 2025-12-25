@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>For You ❤️</title>
+   <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Archivo:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --bg-secondary: #121212;
+      --text: #ffffff;
+      --text-muted: #a0a0a0;
+      --primary: #ff3366;
+      --primary-light: #ff6b8a;
+      --accent: #8b5cf6;
+      --card: #161616;
+      --card-border: #252525;
+      --maxw: 900px;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+      overflow-x: hidden;
+    }
+    
+    /* Gradient orbs background */
+    body::before,
+    body::after {
+      content: '';
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(100px);
+      opacity: 0.15;
+      pointer-events: none;
+      z-index: 0;
+    }
+    body::before {
+      width: 600px;
+      height: 600px;
+      background: var(--primary);
+      top: -200px;
+      right: -200px;
+      animation: float 20s ease-in-out infinite;
+    }
+    body::after {
+      width: 500px;
+      height: 500px;
+      background: var(--accent);
+      bottom: -150px;
+      left: -150px;
+      animation: float 25s ease-in-out infinite reverse;
+    }
+    @keyframes float {
+      0%, 100% { transform: translate(0, 0) scale(1); }
+      50% { transform: translate(50px, 50px) scale(1.1); }
+    }
+    
+    .container { 
+      max-width: var(--maxw); 
+      margin: 0 auto; 
+      padding: 24px;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Hero */
+    .hero {
+      padding: 120px 24px 80px;
+      text-align: center;
+      animation: fadeIn 1s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .hero h1 {
+      font-family: 'Archivo', sans-serif;
+      font-size: clamp(48px, 8vw, 84px);
+      font-weight: 700;
+      margin: 0 0 24px;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p { 
+      font-size: 18px;
+      color: var(--text-muted);
+      max-width: 600px;
+      margin: 0 auto;
+      font-weight: 300;
+      line-height: 1.8;
+    }
+    
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      border-radius: 24px;
+      padding: 48px;
+      margin: 32px 0;
+      backdrop-filter: blur(10px);
+      transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .card:hover {
+      border-color: rgba(255, 51, 102, 0.3);
+      transform: translateY(-4px);
+      box-shadow: 0 20px 60px rgba(255, 51, 102, 0.1);
+    }
+    .card h2 {
+      font-family: 'Archivo', sans-serif;
+      font-size: 28px;
+      font-weight: 600;
+      margin: 0 0 32px;
+      color: var(--text);
+      letter-spacing: -0.01em;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .card h2::before {
+      content: '';
+      width: 4px;
+      height: 28px;
+      background: linear-gradient(180deg, var(--primary), var(--accent));
+      border-radius: 4px;
+    }
+    
+    /* Letter */
+    .letter {
+      font-size: 16px;
+      line-height: 1.9;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+    .letter strong {
+      color: var(--text);
+      font-weight: 500;
+    }
+    
+    /* Timeline */
+    .timeline { 
+      display: grid; 
+      gap: 24px;
+    }
+    .moment {
+      display: grid;
+      grid-template-columns: 110px 1fr;
+      gap: 24px;
+      padding: 24px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 300ms ease;
+    }
+    .moment:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 51, 102, 0.2);
+      transform: translateX(8px);
+    }
+    .moment .date {
+      font-family: 'Archivo', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .moment .date .year {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .moment .desc { 
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.7;
+    }
+    
+    /* Gallery */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 16px;
+    }
+    .photo-placeholder {
+      aspect-ratio: 1;
+      background: linear-gradient(135deg, rgba(255, 51, 102, 0.1), rgba(139, 92, 246, 0.1));
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      display: grid;
+      place-items: center;
+      font-size: 40px;
+      transition: all 400ms cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .photo-placeholder::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      opacity: 0;
+      transition: opacity 400ms ease;
+    }
+    .photo-placeholder:hover::before {
+      opacity: 0.1;
+    }
+    .photo-placeholder:hover { 
+      transform: scale(1.05);
+      border-color: rgba(255, 51, 102, 0.3);
+    }
+    .photo-placeholder span {
+      position: relative;
+      z-index: 1;
+    }
+    .gallery-note {
+      text-align: center;
+      color: var(--text-muted);
+      margin-top: 24px;
+      font-size: 13px;
+      font-weight: 300;
+    }
+    
+    /* Video */
+    .video-container {
+      position: relative;
+      padding-top: 56.25%;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: var(--bg-secondary);
+    }
+    .video-container iframe {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    
+    /* Promises */
+    .promises { 
+      display: grid; 
+      gap: 16px;
+    }
+    .promise {
+      padding: 20px 24px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 14px;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 300;
+      display: flex;
+      align-items: start;
+      gap: 16px;
+      transition: all 300ms ease;
+    }
+    .promise:hover {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: rgba(255, 51, 102, 0.2);
+      transform: translateX(8px);
+    }
+    .promise::before {
+      content: '→';
+      color: var(--primary);
+      font-size: 20px;
+      flex-shrink: 0;
+      font-weight: 300;
+    }
+    
+    /* Envelope */
+    .envelope {
+      display: grid;
+      place-items: center;
+      gap: 24px;
+      text-align: center;
+    }
+    .envelope p {
+      color: var(--text-muted);
+      font-size: 15px;
+      max-width: 500px;
+      font-weight: 300;
+    }
+    .open-btn {
+      padding: 16px 40px;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 15px;
+      letter-spacing: 0.02em;
+      transition: all 300ms cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 10px 40px rgba(255, 51, 102, 0.3);
+      position: relative;
+      overflow: hidden;
+    }
+    .open-btn::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, var(--primary-light), var(--accent));
+      opacity: 0;
+      transition: opacity 300ms ease;
+    }
+    .open-btn:hover::before {
+      opacity: 1;
+    }
+    .open-btn:hover { 
+      transform: translateY(-2px);
+      box-shadow: 0 15px 50px rgba(255, 51, 102, 0.4);
+    }
+    .open-btn span {
+      position: relative;
+      z-index: 1;
+    }
+    .note {
+      display: none;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 51, 102, 0.2);
+      border-radius: 20px;
+      padding: 32px;
+      margin-top: 24px;
+      color: var(--text-muted);
+      font-size: 15px;
+      line-height: 1.9;
+      max-width: 600px;
+      font-weight: 300;
+      animation: slideIn 500ms cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(-20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .note .signature {
+      margin-top: 24px;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    /* Footer */
+    footer {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 80px 24px 60px;
+      font-size: 13px;
+      font-weight: 300;
+      line-height: 1.8;
+    }
+    footer .date {
+      color: var(--primary);
+      font-weight: 500;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .card { padding: 32px 24px; }
+      .hero { padding: 80px 24px 60px; }
+      .moment { 
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <section class="hero">
+      <h1>For You</h1>
+      <p>I made this to say I love you and to celebrate what we have, and to promise how I'll show up even moving forward.</p>
+    </section>
+
+    <section class="card" aria-labelledby="apology-title">
+      <h2 id="apology-title">Letter 🗣️🗣️🗣️</h2>
+      <div class="letter">
+        Creating this page is my way of showing you that I care deeply about you and about us. You mean the world to me, even when you sleep off randomly at night or laugh at my terrible jokes (which I know you secretly love). 
+        <br><br>
+       I know I've messed up before, and I'm sure I'll make mistakes again—but I promise I'll always own up to them and do everything I can to make things right. That's what matters to me: not being perfect, but being honest and always choosing us.
+        <br><br>
+      You've made my life so much better just by being in it. The way you laugh, the way you understand me without me having to explain—it all reminds me how lucky I am. Every day with you feels like an adventure, whether we're doing something exciting or just being lazy together on the couch.
+       <br><br>
+I love you more than I can say, more than food, and that's really saying something. You're my favorite person, my best friend, and the one I want by my side through everything. I'm so grateful for you and everything we share.
+
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="gallery-title">
+      <h2 id="gallery-title">Memories I Cherish</h2>
+      <div class="gallery">
+          <div class="photo-placeholder" style="background-image: url('pic1.jpg'); background-size: cover; background-position: center;"></div>
+        <div class="photo-placeholder" style="background-image: url('pic2.png'); background-size: cover; background-position: center;"></div>
+        <div class="photo-placeholder" style="background-image: url('pic3.jpg'); background-size: cover; background-position: center;"></div>
+        <div class="photo-placeholder" style="background-image: url('pic4.jpg'); background-size: cover; background-position: center;"></div>
+        <div class="photo-placeholder" style="background-image: url('pic5.jpg'); background-size: cover; background-position: center;"></div>
+        <div class="photo-placeholder" style="background-image: url('pic6.png'); background-size: cover; background-position: center;"></div>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="song-title">
+      <h2 id="song-title">Our Song</h2>
+      <div class="video-container">
+        <iframe
+          title="Our Song"
+          <source src="The Marías - Heavy.mp4" type="video/mp4">
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </section>
+
+ <section class="card envelope" aria-labelledby="reasons-title">
+      <h2 id="reasons-title">Why I Love You</h2>
+      <p>I could write a thousand reasons, so I made something special to show you just a few hundred of them.</p>
+      <a href="page2.html" style="text-decoration: none;">
+        <button class="open-btn">
+          <span>Why I Love You</span>
+        </button>
+      </a>
+    </section>
+
+
+    <footer>
+
+      <br>
+      I know you hate letters, am I doing too much? 💔💔💔
+    </footer>
+  </main>
+
+  <script>
+
+    
+    const openBtn = document.getElementById('openBtn');
+    const noteEl = document.getElementById('note');
+    
+    openBtn.addEventListener('click', () => {
+      const isOpen = noteEl.style.display === 'block';
+      noteEl.style.display = isOpen ? 'none' : 'block';
+      openBtn.querySelector('span').textContent = isOpen ? 'Open the Letter' : 'Close the Letter';
+      openBtn.setAttribute('aria-expanded', String(!isOpen));
+      
+      if (!isOpen) {
+        popHearts();
+      }
+    });
+    
+    function popHearts() {
+      const hearts = ['💖', '💕', '💗', '💝', '❤️'];
+      const n = 25;
+      
+      for (let i = 0; i < n; i++) {
+        setTimeout(() => {
+          const span = document.createElement('span');
+          span.textContent = hearts[Math.floor(Math.random() * hearts.length)];
+          span.style.cssText = `
+            position: fixed;
+            left: ${Math.random() * 100}vw;
+            top: -20px;
+            font-size: ${Math.random() * 16 + 20}px;
+            opacity: 1;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 2.5s cubic-bezier(0.4, 0, 0.2, 1), opacity 2.5s ease;
+          `;
+          document.body.appendChild(span);
+          
+          requestAnimationFrame(() => {
+            span.style.transform = `translateY(${Math.random() * 100 + 80}vh) rotate(${Math.random() * 360}deg)`;
+            span.style.opacity = '0';
+          });
+          
+          setTimeout(() => span.remove(), 2600);
+        }, i * 60);
+      }
+    }
+  </script>
+</body>
+</html>

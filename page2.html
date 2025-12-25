@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Why I Love You ❤️</title>
+  <meta name="description" content="An infinite network of reasons why I love you." />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Archivo:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0a;
+      --text: #ffffff;
+      --text-muted: #a0a0a0;
+      --primary: #ff3366;
+      --primary-light: #ff6b8a;
+      --accent: #8b5cf6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      -webkit-font-smoothing: antialiased;
+      cursor: default;
+    }
+    
+    canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      z-index: 1;
+    }
+    
+    .ui-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      pointer-events: none;
+    }
+    
+    .title {
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      z-index: 3;
+    }
+    
+    .title h1 {
+      font-family: 'Archivo', sans-serif;
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-light) 50%, var(--accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .title p {
+      font-size: 14px;
+      color: var(--text-muted);
+      font-weight: 300;
+    }
+    
+    .counter {
+      position: absolute;
+      top: 40px;
+      right: 40px;
+      text-align: right;
+      z-index: 3;
+    }
+    
+    .counter .number {
+      font-family: 'Archivo', sans-serif;
+      font-size: 48px;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+    
+    .counter .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-top: 4px;
+    }
+    
+    .node-tooltip {
+      position: fixed;
+      background: rgba(22, 22, 22, 0.95);
+      border: 1px solid rgba(255, 51, 102, 0.3);
+      border-radius: 16px;
+      padding: 20px 24px;
+      max-width: 340px;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.9);
+      transition: opacity 300ms ease, transform 300ms ease;
+      z-index: 4;
+      backdrop-filter: blur(10px);
+    }
+    
+    .node-tooltip.visible {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+    }
+    
+    .node-tooltip .number {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--primary);
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    
+    .node-tooltip .message {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text);
+      font-weight: 300;
+    }
+    
+    .instructions {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+      font-size: 13px;
+      color: var(--text-muted);
+      font-weight: 300;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+    
+    @media (max-width: 768px) {
+      .title { top: 24px; }
+      .counter { top: 24px; right: 24px; }
+      .counter .number { font-size: 32px; }
+      .instructions { bottom: 24px; font-size: 12px; }
+      .node-tooltip { max-width: 280px; padding: 16px 20px; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  
+  <div class="ui-overlay">
+    <div class="title">
+      <h1>Why I Love You</h1>
+      <p>An infinite network of reasons</p>
+    </div>
+    
+    <div class="counter">
+      <div class="number" id="reasonCount">250</div>
+      <div class="label">Reasons & Counting</div>
+    </div>
+    
+    <div id="tooltip" class="node-tooltip">
+      <div class="number"></div>
+      <div class="message"></div>
+    </div>
+    
+    <div class="instructions">
+      Move your mouse to explore
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const tooltip = document.getElementById('tooltip');
+    
+    let width, height, nodes = [], connections = [];
+    let mouse = { x: 0, y: 0 };
+    let camera = { x: 0, y: 0, targetX: 0, targetY: 0 };
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+    
+    // reasons why I love you
+    const reasons = [
+      "The way you laugh at unexpected moments",
+      "Your random acts of thoughtfulness",
+      "How you make ordinary days feel special",
+      "The quiet comfort of your presence",
+      "Your ability to find joy in small things",
+      "The way you listen without judgment",
+      "Your spontaneous moments of kindness",
+      "How you make me feel understood",
+      "Your unique perspective on life",
+      "The warmth in your smile",
+      "How you turn mistakes into learning moments",
+      "Your genuine curiosity about the world",
+      "The way you care about details",
+      "Your patience when things get difficult",
+      "How you stay true to yourself",
+      "Your creative way of solving problems",
+      "The energy you bring to conversations",
+      "How you make time for what matters",
+      "Your willingness to grow and learn",
+      "The way you handle challenges",
+      "Your thoughtful gestures",
+      "How you remember little things",
+      "Your sense of wonder",
+      "The way you express yourself",
+      "Your delicious looking thighs 🗣️🗣️",
+      "How you inspire others quietly",
+      "Your ability to stay calm",
+      "The way you celebrate small wins",
+      "Your open-mindedness",
+      "How you make people feel welcome",
+      "Your dedication to your goals",
+      "The way you find humor in situations",
+      "Your gentle encouragement",
+      "How you appreciate effort",
+      "Your willingness to help",
+      "The way you think deeply",
+      "Your positive influence",
+      "How you stay hopeful",
+      "Your creative spirit",
+      "The way you handle responsibility",
+      "Your authentic reactions",
+      "How you value relationships",
+      "Your considerate nature",
+      "The way you adapt to change",
+      "Your quiet strength",
+      "How you notice things others miss",
+      "Your balanced approach to life",
+      "The way you communicate clearly",
+      "Your respectful attitude",
+      "How you pursue your interests",
+      "Your ability to empathize",
+      "The way you stay focused",
+      "Your graceful resilience",
+      "How you make decisions",
+      "Your thoughtful opinions",
+      "The way you express gratitude",
+      "Your genuine enthusiasm",
+      "How you handle setbacks",
+      "Your consistent reliability",
+      "The way you show up",
+      "Your intellectual curiosity",
+      "How you look at me with those eyes",
+      "Your humble confidence",
+      "The way you treat people",
+      "Your careful consideration",
+      "How you stay organized",
+      "Your natural warmth",
+      "The way you share ideas",
+      "Your supportive presence",
+      "How you acknowledge others",
+      "Your sense of timing",
+      "The way you prioritize",
+      "Your honest communication",
+      "How you embrace differences",
+      "Your thoughtful questions",
+      "The way you process information",
+      "Your steady progress",
+      "How you celebrate others",
+      "Your reflective moments",
+      "The way you take initiative",
+      "Your considerate planning",
+      "How you stay grounded",
+      "Your ability to compromise",
+      "The way you show appreciation",
+      "Your quiet leadership",
+      "How you maintain balance",
+      "Your adaptable mindset",
+      "The way you handle stress",
+      "Your genuine interest",
+      "How you build connections",
+      "Your careful attention",
+      "The way you stay present",
+      "Your thoughtful pace",
+      "How you respect boundaries",
+      "Your creative solutions",
+      "The way you stay motivated",
+      "Your accepting nature",
+      "How you encourage growth",
+      "Your patient approach",
+      "The way you value time",
+      "Your subtle humor",
+      "How you remain authentic",
+      "Your calm demeanor",
+      "The way you handle feedback",
+      "Your willingness to try",
+      "How you stay curious",
+      "Your respectful distance",
+      "The way you offer support",
+      "Your consistent effort",
+      "How you process emotions",
+      "Your thoughtful silence",
+      "The way you ask questions",
+      "Your natural rhythm",
+      "How you share experiences",
+      "Your open communication",
+      "The way you stay engaged",
+      "Your balanced perspective",
+      "How you handle uncertainty",
+      "Your gentle persistence",
+      "The way you learn quickly",
+      "Your considerate responses",
+      "How you maintain integrity",
+      "Your quiet observations",
+      "The way you stay committed",
+      "Your flexible thinking",
+      "How you practice patience",
+      "Your sincere expressions",
+      "The way you handle pressure",
+      "Your thoughtful gestures",
+      "How you try to stay optimistic",
+      "Your respectful listening",
+      "The way you give space",
+      "Your steady presence",
+      "How you value quality",
+      "Your measured reactions",
+      "The way you share joy",
+      "Your careful words",
+      "How make me feel",
+      "Your genuine care",
+      "The way you notice effort",
+      "Your balanced energy",
+      "How you maintain focus",
+      "Your thoughtful timing",
+      "The way you express feelings",
+      "Your natural kindness",
+      "How you handle complexity",
+      "Your patient explanations",
+      "The way you stay reliable",
+      "Your considerate actions",
+      "How you build trust",
+      "Your quiet confidence",
+      "The way you show respect",
+      "Your steady improvement",
+      "How you celebrate progress",
+      "Your authentic presence",
+      "The way you handle conflict",
+      "Your gentle guidance",
+      "How you stay composed",
+      "Your thoughtful approach",
+      "The way you value honesty",
+      "Your consistent character",
+      "How you maintain standards",
+      "Your balanced judgment",
+      "The way you offer perspective",
+      "Your genuine reactions",
+      "How you stay dedicated",
+      "Your respectful boundaries",
+      "The way you communicate needs",
+      "Your patient teaching",
+      "How you handle responsibility",
+      "Your quiet determination",
+      "The way you stay focused",
+      "Your thoughtful priorities",
+      "How you express yourself",
+      "Your eyes that I get lost in",
+      "The way you handle change",
+      "Your steady commitment",
+      "How you value growth",
+      "Your considerate nature",
+      "The way you stay present",
+      "Your authentic choices",
+      "How you maintain balance",
+      "Your thoughtful decisions",
+      "The way you show care",
+      "Your genuine interest",
+      "How you stay engaged",
+      "Your respectful approach",
+      "The way you handle doubt",
+      "Your patient persistence",
+      "How you celebrate moments",
+      "Your quiet strength",
+      "The way you stay true",
+      "Your balanced outlook",
+      "How you express gratitude",
+      "Your considerate timing",
+      "The way you offer help",
+      "Your steady support",
+      "How you maintain hope",
+      "Your thoughtful presence",
+      "The way you stay calm",
+      "Your genuine warmth",
+      "How you handle transitions",
+      "Your patient understanding",
+      "The way you stay consistent",
+      "Your balanced approach",
+      "How you value connections",
+      "Your quiet wisdom",
+      "The way you show interest",
+      "Your steady reliability",
+      "How you maintain composure",
+      "Your thoughtful responses",
+      "The way you express care",
+      "Your authentic engagement",
+      "How you stay mindful",
+      "Your considerate words",
+      "The way you handle challenges",
+      "Your gentle encouragement",
+      "How you celebrate success",
+      "Your quiet perseverance",
+      "The way you stay open",
+      "Your balanced perspective",
+      "How you value effort",
+      "Your thoughtful gestures",
+      "The way you show appreciation",
+      "Your genuine presence",
+      "How you maintain integrity",
+      "Your patient approach",
+      "The way you stay grounded",
+      "Your considerate actions",
+      "How you express feelings",
+      "Your steady progress",
+      "The way you handle setbacks",
+      "Your authentic reactions",
+      "How you stay committed",
+      "Your balanced energy",
+      "The way you value time",
+      "Your thoughtful planning",
+      "How you show respect",
+      "Your quiet confidence",
+      "The way you stay focused",
+      "Your genuine enthusiasm",
+      "How you handle feedback",
+      "Your patient listening",
+      "The way you express yourself",
+      "Your steady presence",
+      "How you maintain balance",
+      "Your thoughtful consideration",
+      "The way you show care",
+      "Your authentic self",
+      "How you a real with yourself",
+      "The way you make me want to be better",
+      "Your infectious laughter that fills the room",
+      "How you always know when I need a hug"
+    ];
+    
+    // Resize canvas
+    function resize() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    resize();
+    window.addEventListener('resize', resize);
+    
+    // Create infinite grid of nodes
+    function createNodes() {
+      nodes = [];
+      connections = [];
+      
+      const gridSize = 250;
+      const spacing = 180;
+      const cols = Math.ceil(Math.sqrt(gridSize));
+      const rows = Math.ceil(gridSize / cols);
+      
+      // Calculate world bounds for wrapping
+      const worldWidth = cols * spacing;
+      const worldHeight = rows * spacing;
+      
+      // Create nodes in a scattered grid pattern
+      for (let i = 0; i < gridSize; i++) {
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        
+        const baseX = col * spacing + (Math.random() - 0.5) * 80;
+        const baseY = row * spacing + (Math.random() - 0.5) * 80;
+        
+        nodes.push({
+          x: baseX,
+          y: baseY,
+          baseX,
+          baseY,
+          radius: 6 + Math.random() * 3,
+          message: reasons[i],
+          number: i + 1,
+          pulseOffset: Math.random() * Math.PI * 2,
+          worldWidth,
+          worldHeight
+        });
+      }
+      
+      // Create connections between nearby nodes (with wrapping)
+      nodes.forEach((node, i) => {
+        const nearbyNodes = nodes
+          .map((n, idx) => {
+            // Calculate distance considering wrapping
+            let dx = Math.abs(n.x - node.x);
+            let dy = Math.abs(n.y - node.y);
+            
+            // Check wrapped distances
+            dx = Math.min(dx, worldWidth - dx);
+            dy = Math.min(dy, worldHeight - dy);
+            
+            return { node: n, idx, dist: Math.sqrt(dx * dx + dy * dy) };
+          })
+          .filter(n => n.idx !== i && n.dist < spacing * 1.8)
+          .sort((a, b) => a.dist - b.dist)
+          .slice(0, 5);
+        
+        nearbyNodes.forEach(nearby => {
+          if (!connections.find(c => 
+            (c.from === i && c.to === nearby.idx) || 
+            (c.from === nearby.idx && c.to === i)
+          )) {
+            connections.push({ from: i, to: nearby.idx });
+          }
+        });
+      });
+      
+      return { worldWidth, worldHeight };
+    }
+    
+    const worldBounds = createNodes();
+    
+    // Mouse handling - camera follows mouse with infinite movement
+    let lastMouseX = 0;
+    let lastMouseY = 0;
+    
+    canvas.addEventListener('mousemove', (e) => {
+      mouse.x = e.clientX;
+      mouse.y = e.clientY;
+      
+      // Calculate mouse delta for infinite scrolling
+      const deltaX = e.clientX - lastMouseX;
+      const deltaY = e.clientY - lastMouseY;
+      
+      lastMouseX = e.clientX;
+      lastMouseY = e.clientY;
+      
+      // Camera moves continuously based on mouse position from center
+      // Increased multiplier for more dramatic movement
+      const distanceFromCenterX = (e.clientX - width / 2) / width;
+      const distanceFromCenterY = (e.clientY - height / 2) / height;
+      
+      // Apply velocity based on distance from center (infinite scrolling effect)
+      camera.targetX += distanceFromCenterX * 8;
+      camera.targetY += distanceFromCenterY * 8;
+    });
+    
+    canvas.addEventListener('mouseleave', () => {
+      tooltip.classList.remove('visible');
+    });
+    
+    // Animation loop
+    let time = 0;
+    let hoveredNode = null;
+    
+    function animate() {
+      time += 0.01;
+      
+      ctx.fillStyle = '#0a0a0a';
+      ctx.fillRect(0, 0, width, height);
+      
+      // Smooth camera movement following mouse with wrapping
+      camera.x += (camera.targetX - camera.x) * 0.08;
+      camera.y += (camera.targetY - camera.y) * 0.08;
+      
+      // Wrap camera position
+      const wrappedCameraX = ((camera.x % worldBounds.worldWidth) + worldBounds.worldWidth) % worldBounds.worldWidth;
+      const wrappedCameraY = ((camera.y % worldBounds.worldHeight) + worldBounds.worldHeight) % worldBounds.worldHeight;
+      
+      ctx.save();
+      ctx.translate(width / 2, height / 2);
+      
+      // Find hovered node
+      hoveredNode = null;
+      let closestDist = Infinity;
+      
+      // Draw connections with wrapping
+      connections.forEach(conn => {
+        const from = nodes[conn.from];
+        const to = nodes[conn.to];
+        
+        // Calculate wrapped positions for both nodes
+        const drawWrappedConnection = (offsetX, offsetY) => {
+          const fromX = from.x + offsetX - wrappedCameraX;
+          const fromY = from.y + offsetY - wrappedCameraY;
+          const toX = to.x + offsetX - wrappedCameraX;
+          const toY = to.y + offsetY - wrappedCameraY;
+          
+          // Only draw if at least one endpoint is visible
+          if ((Math.abs(fromX) < width && Math.abs(fromY) < height) || 
+              (Math.abs(toX) < width && Math.abs(toY) < height)) {
+            
+            ctx.beginPath();
+            ctx.moveTo(fromX, fromY);
+            ctx.lineTo(toX, toY);
+            
+            const midX = (fromX + toX) / 2;
+            const midY = (fromY + toY) / 2;
+            const distToMouse = Math.hypot(mouse.x - width/2 - midX, mouse.y - height/2 - midY);
+            const glowIntensity = Math.max(0, 1 - distToMouse / 300);
+            
+            if (glowIntensity > 0) {
+              ctx.strokeStyle = `rgba(255, 51, 102, ${0.1 + glowIntensity * 0.4})`;
+              ctx.lineWidth = 1 + glowIntensity * 1.5;
+            } else {
+              ctx.strokeStyle = 'rgba(255, 51, 102, 0.08)';
+              ctx.lineWidth = 0.5;
+            }
+            
+            ctx.stroke();
+          }
+        };
+        
+        // Draw connection in all 9 positions (center + 8 wrapping directions)
+        for (let xOff = -1; xOff <= 1; xOff++) {
+          for (let yOff = -1; yOff <= 1; yOff++) {
+            drawWrappedConnection(xOff * worldBounds.worldWidth, yOff * worldBounds.worldHeight);
+          }
+        }
+      });
+      
+      // Draw nodes with wrapping
+      nodes.forEach(node => {
+        const drawWrappedNode = (offsetX, offsetY) => {
+          const screenX = node.x + offsetX - wrappedCameraX;
+          const screenY = node.y + offsetY - wrappedCameraY;
+          
+          // Only draw if visible
+          if (Math.abs(screenX) < width * 0.6 && Math.abs(screenY) < height * 0.6) {
+            const dx = mouse.x - width/2 - screenX;
+            const dy = mouse.y - height/2 - screenY;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            
+            // Check for hover
+            if (dist < 40 && dist < closestDist) {
+              closestDist = dist;
+              hoveredNode = { ...node, screenX: screenX + width/2, screenY: screenY + height/2 };
+            }
+            
+            const hoverScale = dist < 150 ? 1 + (150 - dist) / 150 * 0.8 : 1;
+            const finalRadius = node.radius * hoverScale;
+            
+            // Subtle pulse
+            const pulse = Math.sin(time * 2 + node.pulseOffset) * 0.15 + 1;
+            
+            // Node glow
+            const glowIntensity = Math.max(0, 1 - dist / 200);
+            const gradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, finalRadius * 4);
+            gradient.addColorStop(0, `rgba(139, 92, 246, ${(0.15 + glowIntensity * 0.3) * pulse})`);
+            gradient.addColorStop(1, 'rgba(139, 92, 246, 0)');
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, finalRadius * 4, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Node core
+            ctx.beginPath();
+            ctx.arc(screenX, screenY, finalRadius, 0, Math.PI * 2);
+            
+            const coreGradient = ctx.createRadialGradient(screenX, screenY, 0, screenX, screenY, finalRadius);
+            coreGradient.addColorStop(0, '#a78bfa');
+            coreGradient.addColorStop(1, '#8b5cf6');
+            ctx.fillStyle = coreGradient;
+            ctx.fill();
+            
+            ctx.strokeStyle = (hoveredNode && hoveredNode.number === node.number) ? '#ff3366' : '#8b5cf6';
+            ctx.lineWidth = (hoveredNode && hoveredNode.number === node.number) ? 2 : 1;
+            ctx.stroke();
+          }
+        };
+        
+        // Draw node in all 9 positions (center + 8 wrapping directions)
+        for (let xOff = -1; xOff <= 1; xOff++) {
+          for (let yOff = -1; yOff <= 1; yOff++) {
+            drawWrappedNode(xOff * worldBounds.worldWidth, yOff * worldBounds.worldHeight);
+          }
+        }
+      });
+      
+      ctx.restore();
+      
+      // Update tooltip
+      if (hoveredNode) {
+        tooltip.querySelector('.number').textContent = `Reason #${hoveredNode.number}`;
+        tooltip.querySelector('.message').textContent = hoveredNode.message;
+        tooltip.style.left = hoveredNode.screenX + 'px';
+        tooltip.style.top = (hoveredNode.screenY - 80) + 'px';
+        tooltip.classList.add('visible');
+      } else {
+        tooltip.classList.remove('visible');
+      }
+      
+      requestAnimationFrame(animate);
+    }
+    
+    animate();
+  </script>
+</body>
+</html>
